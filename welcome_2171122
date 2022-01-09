@@ -1,0 +1,17 @@
+#Ulaş Yaprak,2171122,ulas.yaprak@metu.edu.tr,tulumba
+am_i_here=0
+for id in $(awk -F, '{print $2}' ~/Documents/ME461_2021/weRhere);
+do
+    if [[ $id -eq 2171122 ]]
+    then
+       am_i_here+=1; 
+    fi
+done
+
+if [[ $am_i_here == 0 ]]
+then
+    echo "Ulaş Yaprak,2171122,ulas.yaprak@metu.edu.tr,tulumba">>~/Documents/ME461_2021/weRhere
+    echo "Added Record:Ulaş Yaprak,2171122,ulas.yaprak@metu.edu.tr,tulumba"
+else
+    echo "I am already here!"
+fi

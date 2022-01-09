@@ -1,0 +1,40 @@
+
+#define pulse_pin=8;
+
+int angle;
+int pulse_min = 500;
+int pulse_max = 2500;
+int angle_min = 0;
+int angle_max = 180;
+int pulse_period =100000 ;
+char val[];
+
+
+void setup(){
+    Serial.begin(115200);
+    pinMode(pulse_pin,OUTPUT)
+} // setup ends
+
+void loop(){
+    if (Serial.available()>0){
+        val=Serial.read();
+        angle = atoi(val);
+        move_pos(angle);
+
+    }
+}
+
+int move_pos(int angle){
+    while(Serial.available() = 0){
+        if (angle >= 0){
+            int delay_high = map(angle, angle_min, angle_max, pulse_min, pulse_max);
+            digitalWrite(pulse_pin,HIGH);
+            delayMicroseconds(delay_high);
+            digitalWrite(pulse_pin,LOW);
+            delayMicroseconds(pulse_period-delay_high);
+        }
+        else if (angle==-1){
+        digitalWrite(pulse_pin,LOW);
+        }
+    }
+}
