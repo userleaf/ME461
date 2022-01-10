@@ -11,10 +11,12 @@ baud=9600 # baud rate for serial communication
 def update_slider():
     if (board==1): # if arduino
         val=arduino.readline() # read serial port and set slider value
-        slider.set(val) # set slider value
+        try:
+            slider.set(val) # set slider value
+        except:
+            pass
         print(val)
-    else: # if esp8266
-        pass # do nothing
+        master.after(1,update_slider)
 
 def select_board():
     '''
@@ -146,7 +148,6 @@ angle90=Radiobutton(master,text='90',variable=angle,value=90,command=send_value)
 angle135=Radiobutton(master,text='135',variable=angle,value=135,command=send_value) # create radiobutton to set angle to 135 
 angle180=Radiobutton(master,text='180',variable=angle,value=180,command=send_value) # create radiobutton to set angle to 180
 
-slider.after(100,update_slider) # call function to send value to board
 
 angle0.grid(row=0,column=0) # place radiobutton for 0 degrees
 angle45.grid(row=0,column=1) # place radiobutton for 45 degrees 
@@ -156,4 +157,5 @@ angle180.grid(row=0,column=4) # place radiobutton for 180 degrees
 send.grid(row=0,column=5) # place button to release motor
 slider.grid(row=1,columnspan=6) # place slider
 
+update_slider()
 mainloop() # start GUI
