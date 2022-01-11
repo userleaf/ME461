@@ -4,50 +4,110 @@ import time
 import os
 import platform
 
-pwm = 0 
-freq = 100 
-freqMin = 0
-freqMax = 127
-pwmMin = 0
-pwmMax = 255
+pwm = 0  # initial duty cycle value
+freq = 100  # initial frequency value
+freqMin = 0  # minimum frequency value
+freqMax = 127  # maximum frequency value
+pwmMin = 0  # minimum duty cycle value
+pwmMax = 255  # maximum duty cycle value
 
-baud=9600
+baud=9600  # set baud rate to 9600 bps 
 
-read = "pwm=0,freq=o,dire=ccw"
+read = "pwm=0,freq=o,dire=ccw"  # initial text to display
 
-is_cw = False
-start_stop = True
+is_cw = False  # initial direction value is set to counter clockwise
+start_stop = True  # start_stop is set to true by default
 
-port_user=None
-arduino=None
+port_user=None  # initial port value is set to none 
+arduino=None  
+
+class App(Tk):
+    '''
+    Class to create the GUI
+    '''
+    def __init__(self):
+        '''
+        Initialize the GUI
+        '''
+        super().__init__()
+        
+        # set the windowclass atribute to pop-up window 
+        self.wm_attributes("-type", True)
+ 
+        self.direction=BooleanVar()  # create a boolean variable for the radio button to determine direction
+
+        self.title("Servo Control")  # set the title of the GUI
+
+        self.slider_pwm=Scale(self, from_=pwmMin,to=pwmMax,variable=pwm,orient=HORIZONTAL,command=send_value)  # create a slider 
+        self.slider_freq=Scale(self, from_=freqMin,to=freqMax,variable=freq,orient=HORIZONTAL,command=send_value)  # create a slider 
+
+        self.cw=Radiobutton(self,text='cw',variable=self.direction,value=True,command=send_value)  # create a radio button
+        self.ccw=Radiobutton(self,text='ccw',variable=self.direction,value=False,command=send_value)  # create a radio button
+
+        self.pwm0=Radiobutton(self,text='0',variable=pwm,value=0,command=send_value)  # create a radio button for pwm
+        self.pwm25=Radiobutton(self,text='25',variable=pwm,value=25,command=send_value)  # create a radio button for pwm
+        self.pwm50=Radiobutton(self,text='50',variable=pwm,value=50,command=send_value)  # create a radio button for pwm
+        self.pwm75=Radiobutton(self,text='75',variable=pwm,value=75,command=send_value)  # create a radio button for pwm
+        self.pwm100=Radiobutton(self,text='100',variable=pwm,value=100,command=send_value)  # create a radio button for pwm
+
+        self.start=Button(self,text='Start',command=start_motor)  # create a button to start the motor
+        self.stop=Button(self,text='Stop',command=stop_motor)  # create a button to stop the motor
+
+        self.text=Label(self,text=read)  # create a label to display the data acquired from the arduino
+        self.cw.grid(row=0,column=0)  # place the radio button in the grid
+        self.ccw.grid(row=0,column=1)  # place the radio button in the grid
+
+        self.pwm0.grid(row=0,column=2)  # place the radio button in the grid
+        self.pwm25.grid(row=0,column=3)  # place the radio button in the grid
+        self.pwm50.grid(row=0,column=4)  # place the radio button in the grid
+        self.pwm75.grid(row=0,column=5)  # place the radio button in the grid
+        self.pwm100.grid(row=0,column=6)  # place the radio button in the grid
+
+        self.start.grid(row=0,column=7)  # place the button in the grid
+
+        self.slider_pwm.grid(row=1,columnspan=8)  # place the slider in the grid
+        self.slider_freq.grid(row=2,columnspan=8)  # place the slider in the grid
+        self.stop.grid(row=3,columnspan=8)  # place the button in the grid
+
+        self.text.grid(row=4,columnspan=8)  # place the label in the grid
 
 def byte_converter():
-    global pwm 
-    global freq
-    global is_cw
-    if is_cw:  # if the direction is clockwise
+    '''
+    Converts the data to bytes to be sent to the arduino     
+    '''
+    global pwm  # gets duty cycle value from slider
+    global freq  # gets frequency value from slider
+    global is_cw  # gets direction value from radio button
+    if is_cw:  # if the direction is clockwise 
         return 32768 + 16384 * freq + pwm  # convert to bytes
     else:  # if the direction is counter clockwise
-        return 16384 * freq + pwm  # convert to bytes
+        return 16384 * freq + pwm  # convert to bytes 
 
 def change_text():
-    global read 
+    '''
+    Changes the text on the screen to display the current values of the frequency, duty cycle, pot position, and direction
+    '''
+    global read  # the text to display on the screen
     line=arduino.readline()  # read the line of text from the serial port
     line=line.split(":")  # split the line into a list
-    if line[0]:
+    if line[0]:  # if the first element of the list is not zero
         read = "Rotation:CW " + "Frequency:" + line[1] + " Duty Cycle:" + line[2]  # set the text to the line
-    else:
+    else:  # if the first element of the list is zero
         read = "Rotation:CCW " + "Frequency:" + line[1] + " Duty Cycle:" + line[2]  # set the text to the line
-    text.configure(text=read)
+    master.text.configure(text=read)  # change the text on the screen
 
-def select_port():
-    global port_user 
-    global arduino
+def select_port():  # function to select the port
+    '''
+    Selects the port to be used to communicate with the arduino 
+    '''
+
+    global port_user  # gets the port value from the user
+    global arduino  # gets the arduino variable
     if (platform.system() == "Linux"):  # if the system is linux
         os.system("ls -la /dev/ | grep ttyUSB")  # list all usb ports
     elif (platform.system() == "Windows"):  # if the system is windows
         os.system("chgport")  # open a window to select a port
-    else:
+    else:  # if the system is mac
         pass  # if the system is not linux or windows then do nothing
 
     print('Write serial port to continue (eg. COM1, /dev/ttyUSB0):')  # ask user to write port
@@ -59,77 +119,52 @@ def select_port():
         print("Please input a valid port:")  # tell user to input a valid port
         select_port()  # call select_port function again
 
-def send_value(*foo):
-    global pwm
-    global freq
-    global is_cw
-    global arduino
-    global start_stop
+def send_value(*foo):  # function to send the value to the arduino
+    '''
+    Sends the value to the arduino in the form of bytes arranged as rotation, frequency, and duty cycle 
+    rotations are either 1 or 0 for clockwise and counter clockwise respectively
+    frequency is a value between 0 and 127 (inclusive) and duty cycle is a value between 0 and 255 (inclusive) 
+    which sums up to a max value of 65535 (inclusive) it correspons to the size of an unsigned integer in arduino 
+    '''
+    global pwm  # gets duty cycle value from slider
+    global freq  # gets frequency value from slider
+    global is_cw  # gets direction value from radio button
+    global arduino  # gets the arduino variable
+    global start_stop  # gets the start_stop variable
 
-    pwm = slider_pwm.get()  # gets duty cycle value from slider
-    is_cw = direction.get()  # gets direction value from radio button
+    pwm = master.slider_pwm.get()  # gets duty cycle value from slider
+    is_cw = master.direction.get()  # gets direction value from radio button
     data = byte_converter()  # converts data to bytes
 
-    if (start_stop):
+    if (start_stop):  # if the motor is started
         arduino.write(bytes(data))  # writes data to the port 
-    else:
+    else:  # if the motor is stopped
         arduino.write(bytes(0))  # sends stop data to arduino
 
     time.sleep(0.01)  # delays program for 1/10th of a second
     # change_text()  # calls change_text function
-    print(data)
+    print(data)  # prints data to the console
 
-def stop_motor():
+def stop_motor():  # function to stop the motor
+    '''
+    Stops the motor by setting start_stop to false and sending the stop data to the arduino
+    '''
     global start_stop
     start_stop = False
     send_value()
 
 def start_motor():
+    '''
+    Starts the motor by setting start_stop to true and sending the start data to the arduino
+    '''
     global start_stop
     start_stop = True
     send_value()
 
 
-select_port()
+# select_port()  # call select_port function
 
-master=Tk()
+master=App()  # create a window
 
-direction=BooleanVar()  # create a boolean variable for the radio button to determine direction
-
-slider_pwm=Scale(master, from_=pwmMin,to=pwmMax,variable=pwm,orient=HORIZONTAL,command=send_value)  # create a slider 
-slider_freq=Scale(master, from_=freqMin,to=freqMax,variable=freq,orient=HORIZONTAL,command=send_value)  # create a slider 
-
-cw=Radiobutton(master,text='cw',variable=direction,value=True,command=send_value)  # create a radio button
-ccw=Radiobutton(master,text='ccw',variable=direction,value=False,command=send_value)  # create a radio button
-
-pwm0=Radiobutton(master,text='0',variable=pwm,value=0,command=send_value)  # create a radio button for pwm
-pwm25=Radiobutton(master,text='25',variable=pwm,value=25,command=send_value)  # create a radio button for pwm
-pwm50=Radiobutton(master,text='50',variable=pwm,value=50,command=send_value)  # create a radio button for pwm
-pwm75=Radiobutton(master,text='75',variable=pwm,value=75,command=send_value)  # create a radio button for pwm
-pwm100=Radiobutton(master,text='100',variable=pwm,value=100,command=send_value)  # create a radio button for pwm
-
-start=Button(master,text='Start',command=start_motor)  # create a button to start the motor
-stop=Button(master,text='Stop',command=stop_motor)  # create a button to stop the motor
-
-text=Label(master,text=read)  # create a label to display the data acquired from the arduino
-
-
-cw.grid(row=0,column=0)  # place the radio button in the grid
-ccw.grid(row=0,column=1)  # place the radio button in the grid
-
-pwm0.grid(row=0,column=2)  # place the radio button in the grid
-pwm25.grid(row=0,column=3)  # place the radio button in the grid
-pwm50.grid(row=0,column=4)  # place the radio button in the grid
-pwm75.grid(row=0,column=5)  # place the radio button in the grid
-pwm100.grid(row=0,column=6)  # place the radio button in the grid
-
-start.grid(row=0,column=7)  # place the button in the grid
-
-slider_pwm.grid(row=1,columnspan=8)  # place the slider in the grid
-slider_freq.grid(row=2,columnspan=8)  # place the slider in the grid
-stop.grid(row=3,columnspan=8)  # place the button in the grid
-
-text.grid(row=4,columnspan=8)  # place the label in the grid
-
-mainloop()  # start the main loop
+master.mainloop()  # start the main loop
 
