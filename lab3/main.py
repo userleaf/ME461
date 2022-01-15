@@ -30,10 +30,9 @@ class App(Tk):
         Initialize the GUI
         '''
         super().__init__()
-        
         # set the windowclass atribute to pop-up window 
         self.wm_attributes("-type", True)
- 
+
         self.direction=BooleanVar()  # create a boolean variable for the radio button to determine direction
 
         self.title("Servo Control")  # set the title of the GUI
@@ -79,9 +78,9 @@ def byte_converter():
     global freq  # gets frequency value from slider
     global is_cw  # gets direction value from radio button
     if is_cw:  # if the direction is clockwise 
-        return 32768 + 16384 * freq + pwm  # convert to bytes
+        return 32768 + 256 * freq + pwm  # convert to bytes
     else:  # if the direction is counter clockwise
-        return 16384 * freq + pwm  # convert to bytes 
+        return 256 * freq + pwm  # convert to bytes 
 
 def change_text():
     '''
@@ -133,15 +132,16 @@ def send_value(*foo):  # function to send the value to the arduino
     global start_stop  # gets the start_stop variable
 
     pwm = master.slider_pwm.get()  # gets duty cycle value from slider
+    freq = master.slider_freq.get()  # gets frequency value from slider
     is_cw = master.direction.get()  # gets direction value from radio button
     data = byte_converter()  # converts data to bytes
 
     if (start_stop):  # if the motor is started
-        arduino.write(bytes(data))  # writes data to the port 
+        arduino.write(bytes(str(data),encoding='utf-8'))  # writes data to the port 
     else:  # if the motor is stopped
         arduino.write(bytes(0))  # sends stop data to arduino
 
-    time.sleep(0.01)  # delays program for 1/10th of a second
+    time.sleep(0.1)  # delays program for 1/10th of a second
     # change_text()  # calls change_text function
     print(data)  # prints data to the console
 
@@ -162,8 +162,7 @@ def start_motor():
     send_value()
 
 
-# select_port()  # call select_port function
-
+select_port()  # call select_port function
 master=App()  # create a window
 
 master.mainloop()  # start the main loop
