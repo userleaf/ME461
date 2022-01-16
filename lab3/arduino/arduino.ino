@@ -1,9 +1,12 @@
 #define analogPin A0
-String readString;
+#define maxChars 4
 int potRead = 0;
 unsigned int val = 0;
 unsigned int freq;
 unsigned int duty;
+char strValue[maxChars+1]; // String to hold the incoming data
+int index = 0; // Index for the string
+unsigned int lastval = 3131;
 void setup() {
   pinMode(9, OUTPUT);
   pinMode(10, OUTPUT);
@@ -18,26 +21,12 @@ void setup() {
   Serial.begin(9600);  // initialize serial communication at 9600 bps
 }
 void loop() {
-  while (!Serial.available()) {}
-  // serial read section
-  while (Serial.available())
-  {
-    delay(30);  //delay to allow buffer to fill
-    if (Serial.available() > 0)
-    {
-      char c = Serial.read();  //gets one byte from serial buffer
-      readString += c; //makes the string readString
-      val = readString.toInt(); 
-    }
-  }
-
-  if (readString.length() > 0)
+  
+  if (val!=lastval)
   {
     Serial.print("Arduino received: ");
     Serial.println(val); //see what was received
-    readString = "";
-    Serial.println(freq);
-    Serial.println(duty);
+    lastval=val;
       }
   if (bitRead(val, 15) == 0)
   {
@@ -60,4 +49,27 @@ potRead = analogRead(analogPin);  //read the input pin A0
 
 
 
+}
+void serialEvent(){
+
+  /*
+  This function is called whenever there is data available on the serial port.
+  It reads the incoming data and changes variable onTime to control the servo with pwm.
+
+  */
+  
+  while(Serial.available()) {
+    char ch = Serial.read(); // Read the incoming character from the serial port
+      if(index < maxChars && isDigit(ch)) {  // If the character is a digit and the index is less than the max number of characters
+            strValue[index++] = ch; // Add the character to the string
+            Serial.print("ch");
+      } 
+      else 
+      { // If the character is not a digit or the index is greater than the max number of characters
+            strValue[index] = 0;  // Null terminate the string 
+            val = atoi(strValue); // Convert the string to an integer value
+            Serial.println(strValue);
+      }   
+   index = 0; // Reset the index
+  }
 }

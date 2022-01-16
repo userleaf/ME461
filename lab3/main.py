@@ -137,7 +137,9 @@ def send_value(*foo):  # function to send the value to the arduino
     data = byte_converter()  # converts data to bytes
 
     if (start_stop):  # if the motor is started
-        arduino.write(bytes(str(data),encoding='utf-8'))  # writes data to the port 
+        data = str(data) + ":"
+        arduino.write(bytes(data,encoding='utf-8'))  # writes data to the port 
+
     else:  # if the motor is stopped
         arduino.write(bytes(0))  # sends stop data to arduino
 

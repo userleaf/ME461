@@ -36,6 +36,7 @@ def select_board():
     else: 
         pass
 
+
 def send_value(*args):
     '''
     This function is used to send the value of the angle to the board 
