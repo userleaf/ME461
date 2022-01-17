@@ -9,6 +9,9 @@ int dutyPy;
 const int MaxChars = 6; // Max number of characters to read from serial port
 char strValue[MaxChars+1]; // String to hold the incoming data
 int index = 0; // Index for the string
+String serialOutput="";
+String lastSerialOutput="";
+long int frequency;
 void setup() {
   pinMode(9, OUTPUT);
   pinMode(10, OUTPUT);
@@ -47,18 +50,21 @@ ICR1 = map(freq, 0, 255, 1999, 65535);
 OCR1A = map(duty, 0, 127, 0, ICR1);
 potRead = analogRead(analogPin);  //read the input pin A0
 dutyPy = map(duty,0,127,0,100);
+frequency=(16000000/(ICR1+1));
+
 delay(10);
 
-Serial.print(rotation);
-Serial.print(":");
-Serial.print(16000000/(ICR1+1));
-Serial.print(":");
-Serial.print(dutyPy);
-Serial.print(":");
-Serial.print(80);
-Serial.print("\n");
-Serial.flush();
-
+serialOutput = String(rotation);
+serialOutput += ":";
+serialOutput += String(frequency);
+serialOutput += ":";
+serialOutput += String(dutyPy);
+serialOutput += ":";
+serialOutput += String(potRead);
+if (serialOutput != lastSerialOutput){
+  Serial.println(serialOutput);
+  lastSerialOutput = serialOutput;
+}
 
 }
 void serialEvent() 

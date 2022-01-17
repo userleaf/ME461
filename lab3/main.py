@@ -54,7 +54,7 @@ class App(Tk):
         self.start=Button(self,text='Start',command=start_motor)  # create a button to start the motor
         self.stop=Button(self,text='Stop',command=stop_motor)  # create a button to stop the motor
 
-        self.text=Label(self,text=read)  # create a label to display the data acquired from the arduino
+        self.datafield=Label(self,text=read)  # create a label to display the data acquired from the arduino
 
         self.cw.grid(row=0,column=0)  # place the radio button in the grid
         self.ccw.grid(row=0,column=1)  # place the radio button in the grid
@@ -71,7 +71,9 @@ class App(Tk):
         self.slider_freq.grid(row=2,columnspan=8)  # place the slider in the grid
         self.stop.grid(row=3,columnspan=8)  # place the button in the grid
 
-        self.text.grid(row=4,columnspan=8)  # place the label in the grid
+        self.datafield.grid(row=4,columnspan=8)  # place the label in the grid
+
+        self.datafield.after(10,self.change_text)  # call the update_text function after 100ms
 
     def change_text(self):
         '''
@@ -79,14 +81,19 @@ class App(Tk):
         '''
         global read  # the text to display on the screen
         line=arduino.readline()  # read the line of text from the serial port
-        line=line.split(":")  # split the line into a list
-        if line[0]:  # if the first element of the list is not zero
-            read = "Rotation:CW " + "Frequency:" + line[1] + " Duty Cycle:" + line[2] + "Pot Value:" + line[3]  # set the text to the line
-        else:  # if the first element of the list is zero
-            read = "Rotation:CCW " + "Frequency:" + line[1] + " Duty Cycle:" + line[2] + "Pot Value:" + line[3]  # set the text to the line
-        self.text.configure(text=read)  # change the text on the screen
-        self.after(1,self.change_text)  # call the update_text function after 100ms
-        print(line)
+        try:
+            line=line.decode("utf-8")  # decode the line of text
+            line=line.split(":")  # split the line into a list
+
+            if line[0]:  # if the first element of the list is not zero
+                read = "Rotation:CW " + "Frequency:" + line[1] + " Duty Cycle:" + line[2] + "Pot Value:" + line[3]  # set the text to the line
+            else:  # if the first element of the list is zero
+                read = "Rotation:CCW " + "Frequency:" + line[1] + " Duty Cycle:" + line[2] + "Pot Value:" + line[3]  # set the text to the line
+        except:
+            pass
+        self.datafield.configure(text=read)  # change the text on the screen
+        self.datafield.after(10,self.change_text)  # call the update_text function after 100ms
+
 def byte_converter():
     '''
     Converts the data to bytes to be sent to the arduino     
@@ -180,8 +187,7 @@ def start_motor():
 
 
 select_port()  # call select_port function
-master=App()  # create a window
 
-master.after(1,master.change_text)  # call the update_text function after 100ms
+master=App()  # create a window
 master.mainloop()  # start the main loop
 
