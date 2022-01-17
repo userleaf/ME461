@@ -11,7 +11,7 @@ char strValue[MaxChars+1]; // String to hold the incoming data
 int index = 0; // Index for the string
 String serialOutput="";
 String lastSerialOutput="";
-long int frequency;
+int frequency;
 void setup() {
   pinMode(9, OUTPUT);
   pinMode(10, OUTPUT);
@@ -44,13 +44,13 @@ void loop() {
 freq = val;
 duty = val;
 freq = freq % 32768;
-freq = freq / 512;
-duty %= 128;
-ICR1 = map(freq, 0, 255, 1999, 65535);
-OCR1A = map(duty, 0, 127, 0, ICR1);
+freq = freq / 64;
+duty %= 64;
+ICR1 = map(freq, 0, 511, 1999, 65535);
+OCR1A = map(duty, 0, 63, 0, ICR1);
 potRead = analogRead(analogPin);  //read the input pin A0
-dutyPy = map(duty,0,127,0,100);
-frequency=(16000000/(ICR1+1));
+frequency=2000000/(ICR1+1);
+dutyPy = map(duty,0,63,0,100);
 
 delay(10);
 
@@ -81,7 +81,6 @@ void serialEvent()
       } else { // If the character is not a digit or the index is greater than the max number of characters
             
             strValue[index] = 0;  // Null terminate the string 
-            Serial.println(strValue);
             val = atoi(strValue); // Convert the string to an integer value
           
       }

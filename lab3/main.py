@@ -8,11 +8,11 @@ import subprocess
 
 pwm = 0  # initial duty cycle value
 freq = 250  # initial frequency value
-freqMin = 245  # minimum frequency value
-freqMax = 8000  # maximum frequency value
+freqMin = 32  # minimum frequency value
+freqMax = 1000  # maximum frequency value
 pwmMin = 0  # minimum duty cycle value
 pwmMax = 100  # maximum duty cycle value
-prescalar = 1  # prescalar value
+prescalar = 8  # prescalar value
 baud = 115200  # set baud rate to 9600 bps 
 
 read = "No data available!"  # initial text to display
@@ -85,10 +85,10 @@ class App(Tk):
             line=line.decode("utf-8")  # decode the line of text
             line=line.split(":")  # split the line into a list
 
-            if line[0]:  # if the first element of the list is not zero
-                read = "Rotation:CW " + "Frequency:" + line[1] + " Duty Cycle:" + line[2] + "Pot Value:" + line[3]  # set the text to the line
+            if int(line[0]):  # if the first element of the list is not zero
+                read = "Rotation:CW " + "Frequency:" + line[1] + " Duty Cycle:" + line[2] + " Pot Value:" + line[3]  # set the text to the line
             else:  # if the first element of the list is zero
-                read = "Rotation:CCW " + "Frequency:" + line[1] + " Duty Cycle:" + line[2] + "Pot Value:" + line[3]  # set the text to the line
+                read = "Rotation:CCW " + "Frequency:" + line[1] + " Duty Cycle:" + line[2] + " Pot Value:" + line[3]  # set the text to the line
         except:
             pass
         self.datafield.configure(text=read)  # change the text on the screen
@@ -102,14 +102,14 @@ def byte_converter():
     global freq  # gets frequency value from slider
     global is_cw  # gets direction value from radio button
     icr1 = 16000000 / (prescalar * freq) - 1  # calculates the value of icr1
-    icr1 = interp(icr1,[1999,65535],[0,255])  # divides by 2 to get the value of icr1
-    duty = pwm / (100 / 127)  # calculates the value of duty
+    icr1 = interp(icr1,[1999,65535],[0,511])  # divides by 2 to get the value of icr1
+    duty = pwm / (100 / 63)
     icr1 = int(icr1)  # converts icr1 to an integer
     duty = int(duty)  # converts duty to an integer
     if is_cw:  # if the direction is clockwise 
-        return 32768 + 128 * icr1 + duty  # convert to bytes
+        return 32768 + 64 * icr1 + duty  # convert to bytes
     else:  # if the direction is counter clockwise
-        return 128 * icr1 + duty  # convert to bytes 
+        return 64 * icr1 + duty  # convert to bytes 
 
 
 def select_port():  # function to select the port
