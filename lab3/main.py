@@ -3,23 +3,25 @@ import serial
 import time
 import os
 import platform
+from numpy import interp  # import interp function from numpy
+import subprocess
 
 pwm = 0  # initial duty cycle value
-freq = 100  # initial frequency value
-freqMin = 0  # minimum frequency value
-freqMax = 127  # maximum frequency value
+freq = 250  # initial frequency value
+freqMin = 245  # minimum frequency value
+freqMax = 8000  # maximum frequency value
 pwmMin = 0  # minimum duty cycle value
-pwmMax = 255  # maximum duty cycle value
+pwmMax = 100  # maximum duty cycle value
+prescalar = 1  # prescalar value
+baud = 115200  # set baud rate to 9600 bps 
 
-baud=9600  # set baud rate to 9600 bps 
-
-read = "pwm=0,freq=o,dire=ccw"  # initial text to display
+read = "No data available!"  # initial text to display
 
 is_cw = False  # initial direction value is set to counter clockwise
 start_stop = True  # start_stop is set to true by default
 
 port_user=None  # initial port value is set to none 
-arduino=None  
+arduino=None  # initial arduino variable is set to none
 
 class App(Tk):
     '''
@@ -53,6 +55,7 @@ class App(Tk):
         self.stop=Button(self,text='Stop',command=stop_motor)  # create a button to stop the motor
 
         self.text=Label(self,text=read)  # create a label to display the data acquired from the arduino
+
         self.cw.grid(row=0,column=0)  # place the radio button in the grid
         self.ccw.grid(row=0,column=1)  # place the radio button in the grid
 
@@ -70,6 +73,20 @@ class App(Tk):
 
         self.text.grid(row=4,columnspan=8)  # place the label in the grid
 
+    def change_text(self):
+        '''
+        Changes the text on the screen to display the current values of the frequency, duty cycle, pot position, and direction
+        '''
+        global read  # the text to display on the screen
+        line=arduino.readline()  # read the line of text from the serial port
+        line=line.split(":")  # split the line into a list
+        if line[0]:  # if the first element of the list is not zero
+            read = "Rotation:CW " + "Frequency:" + line[1] + " Duty Cycle:" + line[2] + "Pot Value:" + line[3]  # set the text to the line
+        else:  # if the first element of the list is zero
+            read = "Rotation:CCW " + "Frequency:" + line[1] + " Duty Cycle:" + line[2] + "Pot Value:" + line[3]  # set the text to the line
+        self.text.configure(text=read)  # change the text on the screen
+        self.after(1,self.change_text)  # call the update_text function after 100ms
+        print(line)
 def byte_converter():
     '''
     Converts the data to bytes to be sent to the arduino     
@@ -77,23 +94,16 @@ def byte_converter():
     global pwm  # gets duty cycle value from slider
     global freq  # gets frequency value from slider
     global is_cw  # gets direction value from radio button
+    icr1 = 16000000 / (prescalar * freq) - 1  # calculates the value of icr1
+    icr1 = interp(icr1,[1999,65535],[0,255])  # divides by 2 to get the value of icr1
+    duty = pwm / (100 / 127)  # calculates the value of duty
+    icr1 = int(icr1)  # converts icr1 to an integer
+    duty = int(duty)  # converts duty to an integer
     if is_cw:  # if the direction is clockwise 
-        return 32768 + 256 * freq + pwm  # convert to bytes
+        return 32768 + 128 * icr1 + duty  # convert to bytes
     else:  # if the direction is counter clockwise
-        return 256 * freq + pwm  # convert to bytes 
+        return 128 * icr1 + duty  # convert to bytes 
 
-def change_text():
-    '''
-    Changes the text on the screen to display the current values of the frequency, duty cycle, pot position, and direction
-    '''
-    global read  # the text to display on the screen
-    line=arduino.readline()  # read the line of text from the serial port
-    line=line.split(":")  # split the line into a list
-    if line[0]:  # if the first element of the list is not zero
-        read = "Rotation:CW " + "Frequency:" + line[1] + " Duty Cycle:" + line[2]  # set the text to the line
-    else:  # if the first element of the list is zero
-        read = "Rotation:CCW " + "Frequency:" + line[1] + " Duty Cycle:" + line[2]  # set the text to the line
-    master.text.configure(text=read)  # change the text on the screen
 
 def select_port():  # function to select the port
     '''
@@ -103,14 +113,21 @@ def select_port():  # function to select the port
     global port_user  # gets the port value from the user
     global arduino  # gets the arduino variable
     if (platform.system() == "Linux"):  # if the system is linux
-        os.system("ls -la /dev/ | grep ttyUSB")  # list all usb ports
+        p1 = subprocess.Popen(["ls", "-la","/dev/"], stdout=subprocess.PIPE)
+        p2 = subprocess.Popen(["grep", "ttyUSB"], stdin=p1.stdout, stdout=subprocess.PIPE)
+        p1.stdout.close()  # Allow p1 to receive a SIGPIPE if p2 exits.
+        output,err = p2.communicate()
+        output=output.decode("utf-8")  # decode the output
+        output=output.split(" ")  # split the output into a list
+        output[-1]=output[-1].split("\n")[0]  # remove the new line character from the last element of the list
+        port_user='/dev/' + output[-1]
+        print(output[-1])
     elif (platform.system() == "Windows"):  # if the system is windows
         os.system("chgport")  # open a window to select a port
+        print('Write serial port to continue (eg. COM1, /dev/ttyUSB0):')  # ask user to write port
+        port_user=input()  # get user input
     else:  # if the system is mac
         pass  # if the system is not linux or windows then do nothing
-
-    print('Write serial port to continue (eg. COM1, /dev/ttyUSB0):')  # ask user to write port
-    port_user=input()  # get user input
 
     try:  # try to open the port
         arduino = serial.Serial(port=port_user,baudrate=baud,timeout=.1)  # open the port
@@ -137,13 +154,11 @@ def send_value(*foo):  # function to send the value to the arduino
     data = byte_converter()  # converts data to bytes
 
     if (start_stop):  # if the motor is started
-        data = str(data) + ":"
-        arduino.write(bytes(data,encoding='utf-8'))  # writes data to the port 
-
+        arduino.write(bytes(str(data) + ":",encoding='utf-8'))  # writes data to the port 
+        time.sleep(.15)  # sleep for a tenth of a second
     else:  # if the motor is stopped
-        arduino.write(bytes(0))  # sends stop data to arduino
+        arduino.write(bytes(str(0) + ":", encoding='utf-8'))  # sends stop data to arduino
 
-    time.sleep(0.1)  # delays program for 1/10th of a second
     # change_text()  # calls change_text function
     print(data)  # prints data to the console
 
@@ -167,5 +182,6 @@ def start_motor():
 select_port()  # call select_port function
 master=App()  # create a window
 
+master.after(1,master.change_text)  # call the update_text function after 100ms
 master.mainloop()  # start the main loop
 
