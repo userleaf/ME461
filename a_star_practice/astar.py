@@ -103,12 +103,11 @@ def main():
     end[0] = int(end[0])
     costmapsize[1] = int(costmapsize[1])
     costmapsize[0] = int(costmapsize[0])
-
     costmap = np.random.randint(5,10,(int(costmapsize[0]),int(costmapsize[1])))
     path = astar(start,end,costmap)
-    for i,j in path:
-        costmap[i][j] = 0
-    plt.imshow(costmap,cmap='gray')
+    #for i,j in path:
+    #    costmap[i][j] = 0
+    #plt.imshow(costmap,cmap='gray')
     print(time.time()-start_time)
     #plt.show()
 
