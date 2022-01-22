@@ -12,6 +12,7 @@ int index = 0; // Index for the string
 String serialOutput="";
 String lastSerialOutput="";
 int frequency;
+int lastPot =0;
 void setup() {
   pinMode(9, OUTPUT);
   pinMode(10, OUTPUT);
@@ -49,6 +50,11 @@ duty %= 64;
 ICR1 = map(freq, 0, 511, 1999, 65535);
 OCR1A = map(duty, 0, 63, 0, ICR1);
 potRead = analogRead(analogPin);  //read the input pin A0
+
+if (abs(lastPot-potRead)>=3){
+  lastPot = potRead;
+
+}
 frequency=2000000/(ICR1+1);
 dutyPy = map(duty,0,63,0,100);
 
@@ -60,7 +66,7 @@ serialOutput += String(frequency);
 serialOutput += ":";
 serialOutput += String(dutyPy);
 serialOutput += ":";
-serialOutput += String(potRead);
+serialOutput += String(lastPot);
 if (serialOutput != lastSerialOutput){
   Serial.println(serialOutput);
   lastSerialOutput = serialOutput;

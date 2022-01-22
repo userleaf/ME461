@@ -5,7 +5,7 @@ import os
 import platform
 from numpy import interp  # import interp function from numpy
 import subprocess
-
+from tkinter import ttk
 pwm = 0  # initial duty cycle value
 freq = 250  # initial frequency value
 freqMin = 32  # minimum frequency value
@@ -34,6 +34,10 @@ class App(Tk):
         super().__init__()
         # set the windowclass atribute to pop-up window 
         self.wm_attributes("-type", True)
+        myColor = '#405062'                 # Its a light blue color
+
+        s = ttk.Style()                     # Creating style element
+        s.configure('Wild.TRadiobutton', background=myColor, foreground='black')
 
         self.direction=BooleanVar()  # create a boolean variable for the radio button to determine direction
 
@@ -42,8 +46,8 @@ class App(Tk):
         self.slider_pwm=Scale(self, from_=pwmMin,to=pwmMax,variable=pwm,orient=HORIZONTAL,command=send_value)  # create a slider 
         self.slider_freq=Scale(self, from_=freqMin,to=freqMax,variable=freq,orient=HORIZONTAL,command=send_value)  # create a slider 
 
-        self.cw=Radiobutton(self,text='cw',variable=self.direction,value=True,command=send_value)  # create a radio button
-        self.ccw=Radiobutton(self,text='ccw',variable=self.direction,value=False,command=send_value)  # create a radio button
+        self.cw=ttk.Radiobutton(self,text='cw',variable=self.direction,value=True,command=send_value,style='Wild.TRadiobutton')  # create a radio button
+        self.ccw=ttk.Radiobutton(self,text='ccw',variable=self.direction,value=False,command=send_value,style='Wild.TRadiobutton')  # create a radio button
 
         self.pwm0=Radiobutton(self,text='0',variable=pwm,value=0,command=send_value)  # create a radio button for pwm
         self.pwm25=Radiobutton(self,text='25',variable=pwm,value=25,command=send_value)  # create a radio button for pwm
@@ -162,7 +166,7 @@ def send_value(*foo):  # function to send the value to the arduino
 
     if (start_stop):  # if the motor is started
         arduino.write(bytes(str(data) + ":",encoding='utf-8'))  # writes data to the port 
-        time.sleep(.15)  # sleep for a tenth of a second
+        time.sleep(.19)  # sleep for a tenth of a second
     else:  # if the motor is stopped
         arduino.write(bytes(str(0) + ":", encoding='utf-8'))  # sends stop data to arduino
 
