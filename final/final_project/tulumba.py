@@ -8,7 +8,7 @@ class tulumba:
         self.maxStep = maxStepSize # maximum length of the returned path from run()
         self.maxTime = maxTime # run() is supposed to return before maxTime
         self.clrDict = clrDictionary
-        self.colorz = clrDictionary.keys()
+        self.colorz = clrDictionary.keys().copy()
         # make dictionary from first two columns of colorz
         self.colorzDict = {}
         for i in range(len(self.colorz)):
