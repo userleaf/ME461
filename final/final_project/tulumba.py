@@ -23,7 +23,7 @@ class tulumba:
             for j in range(7):
                 self.arena[i][j] = self.colorVals[img[75+i*50,75+j*50]]
                 if self.arena[i][j] != 0:
-                    self.scores.append(self.arena[i][j],(i,j))
+                    self.scores.append(self.arena[i][j],(75+i*100,75+j*100))
 
         # sort by val descending
         self.scores.sort(key=lambda x: x[0], reverse=True)
@@ -35,11 +35,7 @@ class tulumba:
                 self.myPos = self.info[player][0]
             else:
                 self.oppPos.append(self.info[player][0])
-        
-        for i in range(len(self.scores)):
-            for j in range(len(self.oppPos)):
-                if not self.manhattan(self.scores[i][1],self.oppPos[j]):
-                    self.scores[i][0] = 0
+        target = self.chooseTarget()
         # sort by val descending
         self.scores.sort(key=lambda x: x[0], reverse=True)
         # make path
@@ -49,7 +45,18 @@ class tulumba:
         target = (target[0]*100+50,target[1]*100+50)
         # find the closest corner
         
-        
+    def chooseTarget(self):
+        # find the closest corner
+        for i in range(len(self.scores)):
+            counter=0
+            for j in range(len(self.oppPos)):
+                if not self.manhattan(self.scores[i][1],self.oppPos[j]):
+                    self.scores[i][0] = 0
+                else:    
+                    counter+=1
+            if counter == len(self.oppPos):
+                return self.scores[i][1]
+                
 
     def manhattan(self, a, b):
         if a[0]-b[0]+a[1]-b[1] < a[0]-self.myPos[0]+a[1]-self.myPos[1]:
