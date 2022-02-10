@@ -14,7 +14,7 @@ class tulumba:
         print(self.colorVals)
         
         
-        self.arena = np.zeros((7,7))
+        self.arena = np.zeros(7,ddtype=int)
 
     def run(self, img, info):
         # get time 
