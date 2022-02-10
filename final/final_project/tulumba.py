@@ -22,15 +22,15 @@ class tulumba:
         for i in range(7):
             for j in range(7):
                 self.arena[i][j] = self.colorVals[img[75+i*50,75+j*50]]
-                
                 if self.arena[i][j] != 0:
                     self.scores.append(self.arena[i][j],(i,j))
+
         # sort by val descending
         self.scores.sort(key=lambda x: x[0], reverse=True)
 
         # get info
         self.info = info
-        for player in info['players']:
+        for player in info.keys():
             if self.info[player] == self.name:
                 self.myPos = self.info[player][0]
             else:
