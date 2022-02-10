@@ -1,7 +1,7 @@
 import numpy as np
 import time
 import optparse as op
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 '''
 This library implements a star algorithm over a cost map.
@@ -107,11 +107,12 @@ def main():
     costmapsize[0] = int(costmapsize[0])
     costmap = np.random.randint(5,10,(int(costmapsize[0]),int(costmapsize[1])))
     path = astar(start,end,costmap)
-    #for i,j in path:
+    # for i,j in path:
     #    costmap[i][j] = 0
-    #plt.imshow(costmap,cmap='gray')
+    # plt.imshow(costmap,cmap='gray')
     print(time.time()-start_time)
-    #plt.show()
+    # plt.show()
+
 
 if __name__ == '__main__':
     main()
