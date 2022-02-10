@@ -28,10 +28,12 @@ class Node:
     def __str__(self):
         return str(self.pos)
 
-def astar(start,end,costmap):
+def astar(start,end,costmap,presclr=1):
     '''
     This function implements a star algorithm over a cost map.
     '''
+    global prescalar 
+    prescalar = presclr
     open_list = []
     closed_list = []
     open_list.append(Node(start))
@@ -88,7 +90,6 @@ def neighbors(current,costmap):
 
 def main():
     start_time = time.time()
-    global prescalar
     parser = op.OptionParser()
     parser.add_option('-s','--start',dest='start',help='Start node',default='0,0')
     parser.add_option('-e','--end',dest='end',help='End node',default='30,40')
