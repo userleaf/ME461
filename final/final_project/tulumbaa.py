@@ -1,7 +1,7 @@
 import numpy as np
 import time
 from queue import PriorityQueue
-greedyLength = 501
+greedyLength = 401
 boxSize = 50
 nCorr = 8
 colorz = {
