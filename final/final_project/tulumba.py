@@ -60,9 +60,13 @@ class tulumba:
             else:
                 pass
         # crate np array 7x7 all -1
-        costMap = np.ones((7,7),dtype=int)*-1
+        costMap = np.zeros((7,7),dtype=int)
         for coord,ij in self.path:
-            costMap[ij[0]][ij[1]] = self.arena[ij[0]][ij[1]]
+            if self.arena[ij[0]][ij[1]]<=self.myPoints:
+                costMap[ij[0]][ij[1]] = 100 - self.arena[ij[0]][ij[1]]
+            else: 
+                costMap[ij[0]][ij[1]] = -1
+
         selectedNodes = ast.astar([int((self.myPos[0]-51)/100),int((self.myPos[1]-51)/100)], list(target), costMap,presclr=80)
         path = self.move(selectedNodes) 
         return path
@@ -77,11 +81,16 @@ class tulumba:
             else:
                 path.append([selectedNodes[i][0]*100+75,selectedNodes[i-1][1]*100+75])
                 path.append([selectedNodes[i][0]*100+75,selectedNodes[i][1]*100+75])
-        try:
-            path.remove([self.myPos[0],self.myPos[1]])
-        except:
-            pass
 
+        for i,j in enumerate(path):
+            if i == 0:
+                continue
+            elif j == path[i-1]:
+                path.pop(i)
+            else:
+                continue
+        if path[0] == self.myPos:
+            path.pop(0)
         return path
         
     def chooseTarget(self):
@@ -95,8 +104,10 @@ class tulumba:
                 else:    
                     counter+=1
             
-            if counter == len(self.oppPos):
+            if counter == len(self.oppPos) and self.scores[i][0] <= self.myPoints:
                 return self.scores[i][2] 
+        # if no castle is close get to middle
+        return [5,3]
 
     def manhattan(self, castle, opponent):
         if abs(castle[0]-opponent[0])+abs(castle[1]-opponent[1]) < abs(castle[0]-self.myPos[0])+abs(castle[1]-self.myPos[1]):
