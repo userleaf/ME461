@@ -1,6 +1,6 @@
 import numpy as np
 import time
-import astar as a
+import astar as ast
 class tulumba:
 
     def __init__(self, userName, clrDictionary, maxStepSize, maxTime):
@@ -8,11 +8,11 @@ class tulumba:
         self.maxStep = maxStepSize # maximum length of the returned path from run()
         self.maxTime = maxTime # run() is supposed to return before maxTime
         vals = list(clrDictionary.values())
+        vals.append([(0,0,0),0,1])
         self.colorVals = {}
         for i,j,k in vals:
             self.colorVals[i] = j
         self.arena = np.zeros((7,7),dtype=int)
-        print(self.colorVals)
 
     def run(self, img, info):
         # get time 
@@ -22,7 +22,7 @@ class tulumba:
         self.scores = []
         for i in range(7):
             for j in range(7):
-                self.arena[i][j] = self.colorVals[tuple(img[i*100+50,j*100+50,:])]
+                self.arena[i][j] = self.colorVals[tuple(img[i*100+75][j*100+75])]
                 if self.arena[i][j] != 0:
                     self.scores.append([self.arena[i][j],(75+i*100,75+j*100),(i,j)])
         # sort by val descending
@@ -45,31 +45,43 @@ class tulumba:
     def chooseRoute(self, target):
         # sort the scores by first element decreasing
         self.scores.sort(key=lambda x: x[0], reverse=True)
+        a = 150
+        targetUpScale = [target[0]*100+75,target[1]*100+75]
         for score, coord,ij in self.scores:
             # check if coord is in between target and self.myPos
-            if coord[0] > self.myPos[0] and coord[0] < target[0] and coord[1] > self.myPos[1] and coord[1] < target[1]:
+            if coord[0]+a > self.myPos[0] and coord[0]-a < targetUpScale[0] and coord[1]+a > self.myPos[1] and coord[1]-a < targetUpScale[1]:
                 self.path.append([coord,ij])
-            elif coord[0] < self.myPos[0] and coord[0] > target[0] and coord[1] < self.myPos[1] and coord[1] > target[1]:
+            elif coord[0]-a < self.myPos[0] and coord[0]+a > targetUpScale[0] and coord[1]-a < self.myPos[1] and coord[1]+a > targetUpScale[1]:
                 self.path.append([coord,ij])
-            elif coord[0] > self.myPos[0] and coord[0] < target[0] and coord[1] < self.myPos[1] and coord[1] > target[1]:
+            elif coord[0]+a > self.myPos[0] and coord[0]-a < targetUpScale[0] and coord[1]-a < self.myPos[1] and coord[1]+a > targetUpScale[1]:
                 self.path.append([coord,ij])
-            elif coord[0] < self.myPos[0] and coord[0] > target[0] and coord[1] > self.myPos[1] and coord[1] < target[1]:
+            elif coord[0]-a < self.myPos[0] and coord[0]+a > targetUpScale[0] and coord[1]+a > self.myPos[1] and coord[1]-a < targetUpScale[1]:
                 self.path.append([coord,ij])
             else:
                 pass
-        costMap = np.zeros((7,7))
+        # crate np array 7x7 all -1
+        costMap = np.ones((7,7),dtype=int)*-1
         for coord,ij in self.path:
             costMap[ij[0]][ij[1]] = self.arena[ij[0]][ij[1]]
-        selectedNodes = a.astar(costMap, [int(self.myPos[0]-50)/100,int(self.myPos[1]-50)/100], list(target))
-        return [50,50]
+        selectedNodes = ast.astar([int((self.myPos[0]-51)/100),int((self.myPos[1]-51)/100)], list(target), costMap,presclr=80)
         path = self.move(selectedNodes) 
         return path
 
     def move(self,selectedNodes):
         path = []
+        # reverse selectedNodes
         for i in range(len(selectedNodes)):
-            path.append(np.arange(self.myPos[0],selectedNodes[i][0]*100+50,1))
-            path.append(np.arange(self.myPos[1],selectedNodes[i][1]*100+50,1))
+            if i ==0:
+                path.append([selectedNodes[i][0]*100+75,self.myPos[1]])
+                path.append([self.myPos[0],selectedNodes[i][1]*100+75])
+            else:
+                path.append([selectedNodes[i][0]*100+75,selectedNodes[i-1][1]*100+75])
+                path.append([selectedNodes[i][0]*100+75,selectedNodes[i][1]*100+75])
+        try:
+            path.remove([self.myPos[0],self.myPos[1]])
+        except:
+            pass
+
         return path
         
     def chooseTarget(self):
@@ -84,7 +96,6 @@ class tulumba:
                     counter+=1
             
             if counter == len(self.oppPos):
-                print(self.scores)
                 return self.scores[i][2] 
 
     def manhattan(self, castle, opponent):

@@ -45,9 +45,9 @@ def astar(start,end,costmap,presclr=1):
         if current.pos == endNode.pos:
             return reconstruct_path(current)
         for neighbor in neighbors(current,costmap):
+            print(neighbor.pos)
             if costmap[neighbor.pos[0]][neighbor.pos[1]] == -1:
                 continue
-            if neighbor in closed_list:
                 continue
             neighbor.g = current.g + costmap[neighbor.pos[0]][neighbor.pos[1]]
             neighbor.h = neighbor.manhattan(endNode)
@@ -77,13 +77,14 @@ def neighbors(current,costmap):
     for i in range(current.pos[0]-1,current.pos[0]+2):
         if i < 0 or i >= costmap.shape[0]:
             continue
-        if i == current.pos[0]:
+        elif i == current.pos[0]:
             for j in range(current.pos[1]-1,current.pos[1]+2):
                 if j < 0 or j >= costmap.shape[1]:
                     continue
-                if j == current.pos[1]:
+                elif j == current.pos[1]:
                     continue
-                neighbors.append(Node([i,j],current))
+                else:
+                    neighbors.append(Node([i,j],current))
         else:
             neighbors.append(Node([i,current.pos[1]],current))
     return neighbors
