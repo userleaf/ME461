@@ -1,7 +1,6 @@
 import numpy as np
 import time
-from queue import PriorityQueue
-greedyLength = 401
+greedyLength = 301
 boxSize = 50
 nCorr = 8
 colorz = {
@@ -24,7 +23,7 @@ colorz = {
 
 class tulumba:
 
-    def __init__(self, userName, clrDictionary, maxStepSize, maxTime):
+    def _init_(self, userName, clrDictionary, maxStepSize, maxTime):
 
         self.name = userName  # your object will be given a user name, i.e. your group name
         self.maxStep = maxStepSize  # maximum length of the returned path from run()
@@ -42,13 +41,13 @@ class tulumba:
                     if tuple(img[i * 2 * boxSize - boxSize, j * 2 * boxSize - boxSize, :]) == colorz[dClr][0]:
                         node = Node(i, j, colorz[dClr][1])
                         grid[i - 1].append(node)
-
+        
         # get info
         self.info = info
         self.myX,self.myY = self.info[self.name][0]
         
         # get the nodes closer than 201 steps
-        myQueue = PriorityQueue()
+        myQueue = [float("inf")]
         target = []
         array = []
         for row in grid:
@@ -56,38 +55,61 @@ class tulumba:
                 xDistance = node.x_dist(self.myX)
                 yDistance = node.y_dist(self.myY)
                 manDistance = node.manDistance()
+                 
                 if manDistance < greedyLength:
-                    myQueue.put(node.man-node.points)
-                    target = [node.x,node.y]
+                    
+                    if node.man-node.points*2 < myQueue[0] and not node.points == 0:
+                        myQueue[0] = node.man-node.points
+                        target = [node.x,node.y]
+                        
+        
         x,y = target
         array.append([x,self.myY])
-        array.append([x,y])
+        if not y == self.myY: 
+            array.append([x,y])
+        try:
+            array.remove([self.myX,self.myY])
+        except:
+            pass
+        #if get_distance(x,self.myX,y,self.myY) < 50:
+        #    self.run(img,)
         return array
+#def get_distance(x1,x2,y1,y2):
+#    return abs(x1-x2)+abs(y1-y2)
 class Node:
-    def __init__(self,row,column,points):
+    def _init_(self,row,column,points):
         self.row = row
         self.col = column
         self.points = points
-        self.x1 = self.col * 2 * boxSize - boxSize
-        self.y1 = self.row * 2 * boxSize - boxSize
+        self.x1 = self.row * 2 * boxSize - boxSize
+        self.y1 = self.col * 2 * boxSize - boxSize
         self.x2 = self.x1 + boxSize
         self.y2 = self.y1 + boxSize
 
-        self.neighbors = []
-    def get_pos(self):
-        return self.row,self.col
+        
     def x_dist(self,myX):
         dX1 = abs(myX - self.x1)
         dX2 = abs(myX - self.x2)
-        self.x = min(dX1,dX2)
-        return self.x
+        if dX1 < dX2:
+            self.xd = dX1
+            self.x = self.x1+2
+        else: 
+            self.xd = dX2
+            self.x = self.x2-2
+        return self.xd
 
     def y_dist(self,myY):
-        dY1 = abs(myY - self.x1)
-        dY2 = abs(myY - self.x2)
-        self.y = min(dY1,dY2)
-        return self.y
+        dY1 = abs(myY - self.y1)
+        dY2 = abs(myY - self.y2)
+        if dY1 < dY2:
+            self.yd = dY1
+            self.y = self.y1+2
+        else: 
+            self.yd = dY2
+            self.y = self.y2-2
+
+        return self.yd
 
     def manDistance(self):
-        self.man = self.x + self.y
+        self.man = self.xd + self.yd
         return self.man
