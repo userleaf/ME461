@@ -45,7 +45,6 @@ def astar(start,end,costmap,presclr=1):
         if current.pos == endNode.pos:
             return reconstruct_path(current)
         for neighbor in neighbors(current,costmap):
-            print(neighbor.pos)
             if costmap[neighbor.pos[0]][neighbor.pos[1]] == -1:
                 continue
                 continue
