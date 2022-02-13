@@ -23,7 +23,7 @@ class Node:
 
     def manhattan(self,end):
         global prescalar
-        return prescalar*abs(self.pos[0] - end.pos[0]) + abs(self.pos[1] - end.pos[1])
+        return prescalar*(abs(self.pos[0] - end.pos[0]) + abs(self.pos[1] - end.pos[1]))
 
     def __str__(self):
         return str(self.pos)
@@ -46,7 +46,6 @@ def astar(start,end,costmap,presclr=1):
             return reconstruct_path(current)
         for neighbor in neighbors(current,costmap):
             if costmap[neighbor.pos[0]][neighbor.pos[1]] == -1:
-                continue
                 continue
             neighbor.g = current.g + costmap[neighbor.pos[0]][neighbor.pos[1]]
             neighbor.h = neighbor.manhattan(endNode)
@@ -89,7 +88,6 @@ def neighbors(current,costmap):
     return neighbors
 
 def main():
-    start_time = time.time()
     parser = op.OptionParser()
     parser.add_option('-s','--start',dest='start',help='Start node',default='0,0')
     parser.add_option('-e','--end',dest='end',help='End node',default='30,40')
@@ -107,6 +105,7 @@ def main():
     costmapsize[1] = int(costmapsize[1])
     costmapsize[0] = int(costmapsize[0])
     costmap = np.random.randint(5,10,(int(costmapsize[0]),int(costmapsize[1])))
+    start_time = time.time()
     path = astar(start,end,costmap)
     # for i,j in path:
     #    costmap[i][j] = 0
