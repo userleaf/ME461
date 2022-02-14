@@ -43,7 +43,7 @@ class tulumba:
         self.info = info  # dictionary of info
         self.myPos=self.info[self.name][0]  # your position
         self.myPoints=self.info[self.name][1]  # your points
-        self.my_ij = [int((self.myPos[0])/50),int((self.myPos[1])/50)]  # your position in the arena
+        self.my_ij = [int((self.myPos[0]-20)/50),int((self.myPos[1]-20)/50)]  # your position in the arena
 
         for player in self.info:  # for each player
             if player != self.name:  # if it's not you
